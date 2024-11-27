@@ -684,6 +684,11 @@ def get_dataset_wrapper(
             **ds_kwargs,
         )
         dataset_wrapper = ds_wrapper
+        
+        print("### -------------- INPUT CHECK -------------- ###")
+        print(dataset_wrapper[0]["input_ids"])
+        print("### ----------------------------------------- ###")
+        
     elif d_base_type == "explainchoice":
         dataset_prompter = MultipleChoiceExplainPrompter(d_prompt_style)
         ds_strategy = AlpacaMultipleChoicePromptTokenizingStrategy(
