@@ -20,6 +20,7 @@ class PromptStyle(Enum):
     CHAT = "chat"
     CHATML = "chatml"
     PHI = "phi"
+    NOTHING = "nothing"
 
 
 class Prompter:
@@ -33,20 +34,29 @@ class AlpacaPrompter(Prompter):
     Base class for alpaca prompters
     """
 
-    system_prompt = "Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request."
-    system_no_input_prompt = "Below is an instruction that describes a task. Write a response that appropriately completes the request."
+    system_prompt = ""
+    system_no_input_prompt = "" 
     system_format: str = "{system}"
     turn_format: str
     turn_no_input_format: str
     prompt_style: Optional[str] = None
 
     def __init__(self, prompt_style: Optional[str] = PromptStyle.INSTRUCT.value):
-        self.prompt_style = prompt_style if prompt_style else PromptStyle.INSTRUCT.value
+        self.prompt_style = "nothing"  # prompt_style if prompt_style else PromptStyle.INSTRUCT.value
         self.match_prompt_style()
+        LOG.info(self.prompt_style)
+        LOG.info(self.turn_no_input_format)
 
     def match_prompt_style(self):
         # pylint: disable=duplicate-code
-        if self.prompt_style == PromptStyle.INSTRUCT.value:
+        if self.prompt_style == PromptStyle.NOTHING.value:
+            self.turn_format = "{instruction} {input}"
+            self.turn_no_input_format = (
+                "{instruction}"
+            )
+            self.system_format = ""
+
+        elif self.prompt_style == PromptStyle.INSTRUCT.value:
             self.turn_format = "### Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Response:\n"
             self.turn_no_input_format = (
                 "### Instruction:\n{instruction}\n\n### Response:\n"
@@ -79,13 +89,10 @@ class AlpacaPrompter(Prompter):
                 else ""
             ) + self.turn_format.format(instruction=instruction, input=input_text)
         else:
-            res = (
-                self.system_format.format(system=self.system_no_input_prompt)
-                if self.system_no_input_prompt
-                else ""
-            ) + self.turn_no_input_format.format(instruction=instruction)
+            res = self.turn_no_input_format.format(instruction=instruction)
         if output:
             res = f"{res}{output}"
+            LOG.warning(f"{res}")
 
         return res
 
